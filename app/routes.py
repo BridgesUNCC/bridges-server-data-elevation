@@ -5,10 +5,17 @@ from logging.handlers import RotatingFileHandler
 import wget
 import os
 import math
+import hashlib
+import pickle
+import io
 
 round_val = 4
+maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabits the map folder should be
+LRU = []
 noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&'
 divider = "-----------------------------------------------------------------"
+
+
 
 #https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&resx=0.016666666666666667&resy=0.016666666666666667&bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
 #bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
@@ -77,14 +84,91 @@ def request_map(url, coords):
     filename = wget.download(url, out=f'app/elevation_maps')
     return filename
 
+
+
+def getFolderSize():
+    ''' Calculates the size of the maps folder
+        Returns:
+            int: size of app/reduced_maps folder in bytes
+    '''
+    try:
+        size = 0
+        start_path = 'app/reduced_maps'  # To get size of directory
+        for path, dirs, files in os.walk(start_path):
+            for f in files:
+                fp = os.path.join(str(path), str(f))
+                size = size + os.path.getsize(fp)
+        return size
+    except Exception as e:
+        return (e)
+
+def lruUpdate(location, level, name=None):
+    ''' Updates the LRU list and storage file
+        Parameters:
+            location(list[float]): a maps bounding box
+            level(string): the level of detail a map hash
+            name(string): the name of the city that the map represents
+        Return:
+            None
+    '''
+    if (name == None):
+        try: # Removes the location requested by the API from the LRU list
+            LRU.remove([location[0], location[1], location[2], location[3], level])
+        except:
+            pass
+        #Adds in the requested location into the front of the list
+        LRU.insert(0, [location[0], location[1], location[2], location[3], level])
+        #Removes old maps from server while the map folder is larger than set limit
+        while (getFolderSize() > maxMapFolderSize):
+            #Removes map from server
+            try:
+                re = LRU[len(LRU)-1]
+                if (os.path.isdir(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")):
+                    shutil.rmtree(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")
+                    del LRU[len(LRU)-1]
+                elif(os.path.isdir(f"app/reduced_maps/cities/{re[0]}/{re[1]}")):
+                    shutil.rmtree(f"app/reduced_maps/cities/{re[0]}/{re[1]}")
+                    del LRU[len(LRU)-1]
+            except:
+                print("ERROR Deleteing map File")
+        #updates the LRU file incase the server goes offline or restarts
+        with open("lru.txt", "wb") as fp:   #Pickling
+            pickle.dump(LRU, fp)
+    elif(name != None):
+        try:
+            LRU.remove([name, level])
+        except:
+            pass
+        LRU.insert(0, [name, level])
+        while (getFolderSize() > maxMapFolderSize):
+
+            try:
+                re = LRU[len(LRU)-1]
+                if (len(re) == 5 and os.path.isdir(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")):
+                    shutil.rmtree(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")
+                elif(len(re) == 2 and os.path.isdir(f"app/reduced_maps/cities/{re[0]}/{re[1]}")):
+                    shutil.rmtree(f"app/reduced_maps/cities/{re[0]}/{re[1]}")
+                del LRU[len(LRU)-1]
+            except:
+                print("ERROR Deleteing map File")
+        with open("lru.txt", "wb") as fp:   #Pickling
+            pickle.dump(LRU, fp)
+    return
+
+
+
 def pipeline(coords, res):
-    data = request_map(url_construct(coords, res), coords)
     dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
+    if (os.path.isfile(f"{dir}/data")):
+        f = open(f"{dir}/data")
+        return f
+
+    data = request_map(url_construct(coords, res), coords)
     os.mkdir(f'{dir}')
     os.rename(f'app/{data}', f'{dir}/data')
     if (os.path.isfile(f"{dir}/data")):
         f = open(f"{dir}/data")
-    return f
+        return f
 
 #setting up the server log
 format = logging.Formatter('%(asctime)s %(message)s')
