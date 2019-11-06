@@ -75,14 +75,16 @@ def density_calc(coords):
 
 def request_map(url, coords):
     filename = wget.download(url, out=f'app/elevation_maps')
-    os.mkdir(f'app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/')
-    os.rename(f'{filename}', f'app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/data')
     return filename
 
 def pipeline(coords, res):
     data = request_map(url_construct(coords, res), coords)
-
-    return data
+    dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
+    os.mkdir(f'{dir}')
+    os.rename(f'app/{data}', f'{dir}/data')
+    if (os.path.isfile(f"{dir}/data")):
+        f = open(f"{dir}/data")
+    return f
 
 #setting up the server log
 format = logging.Formatter('%(asctime)s %(message)s')
