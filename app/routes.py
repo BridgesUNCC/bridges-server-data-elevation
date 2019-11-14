@@ -8,9 +8,10 @@ import math
 import hashlib
 import pickle
 import io
+import shutil
 
 round_val = 4
-maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabits the map folder should be
+maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
 LRU = []
 noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&'
 divider = "-----------------------------------------------------------------"
@@ -89,11 +90,11 @@ def request_map(url, coords):
 def getFolderSize():
     ''' Calculates the size of the maps folder
         Returns:
-            int: size of app/reduced_maps folder in bytes
+            int: size of app/elevation_maps folder in bytes
     '''
     try:
         size = 0
-        start_path = 'app/reduced_maps'  # To get size of directory
+        start_path = 'app/elevation_maps'  # To get size of directory
         for path, dirs, files in os.walk(start_path):
             for f in files:
                 fp = os.path.join(str(path), str(f))
@@ -102,57 +103,33 @@ def getFolderSize():
     except Exception as e:
         return (e)
 
-def lruUpdate(location, level, name=None):
+def lruUpdate(location, level):
     ''' Updates the LRU list and storage file
         Parameters:
             location(list[float]): a maps bounding box
             level(string): the level of detail a map hash
-            name(string): the name of the city that the map represents
         Return:
             None
     '''
-    if (name == None):
-        try: # Removes the location requested by the API from the LRU list
-            LRU.remove([location[0], location[1], location[2], location[3], level])
-        except:
-            pass
-        #Adds in the requested location into the front of the list
-        LRU.insert(0, [location[0], location[1], location[2], location[3], level])
-        #Removes old maps from server while the map folder is larger than set limit
-        while (getFolderSize() > maxMapFolderSize):
-            #Removes map from server
-            try:
-                re = LRU[len(LRU)-1]
-                if (os.path.isdir(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")):
-                    shutil.rmtree(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")
-                    del LRU[len(LRU)-1]
-                elif(os.path.isdir(f"app/reduced_maps/cities/{re[0]}/{re[1]}")):
-                    shutil.rmtree(f"app/reduced_maps/cities/{re[0]}/{re[1]}")
-                    del LRU[len(LRU)-1]
-            except:
-                print("ERROR Deleteing map File")
-        #updates the LRU file incase the server goes offline or restarts
-        with open("lru.txt", "wb") as fp:   #Pickling
-            pickle.dump(LRU, fp)
-    elif(name != None):
+    try: # Removes the location requested by the API from the LRU list
+        LRU.remove([location[0], location[1], location[2], location[3], level])
+    except:
+        pass
+    #Adds in the requested location into the front of the list
+    LRU.insert(0, [location[0], location[1], location[2], location[3], level])
+    #Removes old maps from server while the map folder is larger than set limit
+    while (getFolderSize() > maxMapFolderSize):
+        #Removes map from server
         try:
-            LRU.remove([name, level])
-        except:
-            pass
-        LRU.insert(0, [name, level])
-        while (getFolderSize() > maxMapFolderSize):
-
-            try:
-                re = LRU[len(LRU)-1]
-                if (len(re) == 5 and os.path.isdir(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")):
-                    shutil.rmtree(f"app/reduced_maps/coords/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")
-                elif(len(re) == 2 and os.path.isdir(f"app/reduced_maps/cities/{re[0]}/{re[1]}")):
-                    shutil.rmtree(f"app/reduced_maps/cities/{re[0]}/{re[1]}")
+            re = LRU[len(LRU)-1]
+            if (os.path.isdir(f"app/elevation_maps/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")):
+                shutil.rmtree(f"app/elevation_maps/{re[0]}/{re[1]}/{re[2]}/{re[3]}/{re[4]}")
                 del LRU[len(LRU)-1]
-            except:
-                print("ERROR Deleteing map File")
-        with open("lru.txt", "wb") as fp:   #Pickling
-            pickle.dump(LRU, fp)
+        except:
+            print("ERROR Deleteing map File")
+    #updates the LRU file incase the server goes offline or restarts
+    with open("lru.txt", "wb") as fp:   #Pickling
+        pickle.dump(LRU, fp)
     return
 
 
