@@ -12,7 +12,7 @@ import io
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabits the map folder should be
 LRU = []
-noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&'
+noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.asc&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=aaigrid&'
 divider = "-----------------------------------------------------------------"
 
 
