@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 import wget
 import os
 import math
-import hashlib
+import hashlibz
 import pickle
 import io
 import shutil
@@ -138,7 +138,12 @@ def pipeline(coords, res):
     dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
     if (os.path.isfile(f"{dir}/data")):
         f = open(f"{dir}/data")
+        lruUpdate(coords, res)
         return f
+
+
+    if (res[0] < 0.01 or res[1] < 0.01):
+        return "Elevation density too great, please choose a value larger than 0.01"
 
     data = request_map(url_construct(coords, res), coords)
     os.mkdir(f'{dir}')
