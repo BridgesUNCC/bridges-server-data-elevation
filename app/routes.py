@@ -84,7 +84,7 @@ def density_calc(coords):
     return den
 
 def request_map(url, coords):
-    filename = wget.download(url, out=f'app/elevation_maps')
+    filename = wget.download(url, out=f'app/')
     return filename
 
 def getFolderSize():
@@ -132,24 +132,25 @@ def lruUpdate(location, level):
         pickle.dump(LRU, fp)
     return
 
-def pipeline(coords, res="genres"):
-    dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
-    if (os.path.isfile(f"{dir}/data")):
-        f = open(f"{dir}/data")
+def pipeline(coords, res):
+    map_dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
+    if (os.path.isfile(f"{map_dir}/data")):
+        f = open(f"{map_dir}/data")
         data = f.read()
         lruUpdate(coords, res)
         f.close()
-        return send_file(f'elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/data', attachment_filename="ele_data")
-
+        #return send_file(f'elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/data', attachment_filename="ele_data")
+        return data
 
     if (res[0] < 0.01 or res[1] < 0.01):
         return "Elevation density too great, please choose a value larger than 0.01"
 
     data = request_map(url_construct(coords, res), coords)
-    os.makedirs(f'{dir}')
-    os.rename(f'{data}', f'{dir}/data')
-    if (os.path.isfile(f"{dir}/data")):
-        f = open(f"{dir}/data")
+
+    os.makedirs(f'{map_dir}')
+    os.rename(f'{data}', f'{map_dir}/data')
+    if (os.path.isfile(f"{map_dir}/data")):
+        f = open(f"{map_dir}/data")
         data = f.read()
         f.close()
         lruUpdate(coords, res)
@@ -167,3 +168,9 @@ app_log = logging.getLogger('root')
 app_log.setLevel(logging.DEBUG)
 
 app_log.addHandler(my_handler)
+
+try:
+    with open("lru.txt", "rb") as fp:
+        LRU = pickle.load(fp)
+except:
+    pass
