@@ -139,7 +139,6 @@ def pipeline(coords, res):
         data = f.read()
         lruUpdate(coords, res)
         f.close()
-        #return send_file(f'elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/data', attachment_filename="ele_data")
         return data
 
     if (res[0] < 0.01 or res[1] < 0.01):
