@@ -23,9 +23,15 @@ divider = "-----------------------------------------------------------------"
 #bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
 #minlon, minlat, maxlon, maxlat
 
+
+
+#35.3123702255912,-80.72571581793821
+#35.29678506001799,-80.74595040274656
+
+
 #Test coords
 #minLon=-80.97006&minLat=35.08092&maxLon=-80.6693&maxLat=35.3457
-#http://127.0.0.1:5000/elevation?minLon=-80.97006&minLat=35.08092&maxLon=-80.6693&maxLat=35.3457
+#http://127.0.0.1:5000/elevation?minLon=-80.745950&minLat=35.29678&maxLon=-80.725715&maxLat=35.312370
 
 # This takes the output of the server and adds the appropriate headers to make the security team happy
 def harden_response(message_str):
@@ -51,7 +57,7 @@ def ele():
         res_val = [round(float(request.args['resX']), round_val), round(float(request.args['resY']), round_val)]
         app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
     except:
-        res_val = density_calc(coord_val)
+        res_val = [.01666, .01666]
         
     return harden_response(pipeline(coord_val, res_val))
     
@@ -141,8 +147,10 @@ def pipeline(coords, res):
         f.close()
         return data
 
-    if (res[0] < 0.01 or res[1] < 0.01):
-        return "Elevation density too great, please choose a value larger than 0.01"
+    if (res[0] < 0.01):
+        res[0] = .01666
+    if(res[1] < 0.01):
+        res[1] = .01666
 
     data = request_map(url_construct(coords, res), coords)
 
