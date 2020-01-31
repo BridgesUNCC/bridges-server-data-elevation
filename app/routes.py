@@ -60,6 +60,33 @@ def ele():
         res_val = [.01666, .01666]
         
     return harden_response(pipeline(coord_val, res_val))
+
+@app.route('/hash')
+def hashreturn():
+    try:
+        coord_val = [round(float(request.args['minLon']), round_val), round(float(request.args['minLat']), round_val), round(float(request.args['maxLon']), round_val), round(float(request.args['maxLat']), round_val)]
+        #log stuffs
+        app_log.info(divider)
+        app_log.info(f"Requester: {request.remote_addr}")
+        app_log.info(f"Script started with BBox: {request.args['minLon']}, {request.args['minLat']}, {request.args['maxLon']}, {request.args['maxLat']}")
+    except:
+        print("System arguements are invalid")
+        app_log.exception(f"System arguements invalid {request.args}")
+        return 'not valid coordinate inputs'
+    
+
+    dir = f"app/elevation_maps/{coord_val[0]}/{coord_val[1]}/{coord_val[2]}/{coord_val[3]}"
+
+    try:
+        with open(f"{dir}/hash.txt", 'r') as f:
+            re = f.readlines()
+            app_log.info(f"Hash value found: {re[0]}")
+            return harden_response(re[0])
+    except:
+        print("No map hash found")
+        return harden_response("false")
+ 
+    return ''
     
 @app.route('/favicon.ico')
 def icon():
@@ -161,7 +188,21 @@ def pipeline(coords, res):
         data = f.read()
         f.close()
         lruUpdate(coords, res)
-        return data
+        
+
+    try:
+        md5_hash = hashlib.md5()
+        with open(f"{map_dir}/data","rb") as f:
+            # Read and update hash string value in blocks of 4K
+            for byte_block in iter(lambda: f.read(4096),b""):
+                md5_hash.update(byte_block)
+            app_log.info("Hash: " + md5_hash.hexdigest())
+        with open(f"{map_dir}/hash.txt", "w") as h:
+            h.write(md5_hash.hexdigest())
+    except:
+        app_log.exception("Hashing error occured")
+    
+    return data
 
 #setting up the server log
 format = logging.Formatter('%(asctime)s %(message)s')
