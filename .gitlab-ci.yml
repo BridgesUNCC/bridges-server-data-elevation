@@ -1,0 +1,18 @@
+stages:
+  - test
+
+test:
+  tags:
+     - test
+  stage: test
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install flask
+    - pip install wget
+    - python run.py
+
+  artifacts:
+    paths:
+      - builds/
+  only: ['test']
