@@ -11,7 +11,7 @@ http://cci-bridges-elevation-t.dyn.uncc.edu/elevation?minLon=6.0205581&minLat=46
 
 
 
-The resolution of a map is what each incriment will be on the x and y axis. 
+### The resolution of a map is what each incriment will be on the x and y axis. 
 
 To use your own density values format it like
 ```html
