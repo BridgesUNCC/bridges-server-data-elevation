@@ -5,6 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import wget
 import os
+import subprocess
 import math
 import hashlib
 import pickle
@@ -120,6 +121,12 @@ def request_map(url, coords):
     filename = wget.download(url, out=f'app/')
     return filename
 
+
+def convert_map(filename):
+    command = f"gdal_translate -of AAIGrid {filename} app/data.asc"
+    subprocess.run([command], shell=True)
+    return "data.asc"
+
 def getFolderSize():
     ''' Calculates the size of the maps folder
         Returns:
@@ -206,6 +213,7 @@ def pipeline(coords, res):
 
 #setting up the server log
 format = logging.Formatter('%(asctime)s %(message)s')
+
 logFile = 'log.log'
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
                                  backupCount=2, encoding=None, delay=0)
