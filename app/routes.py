@@ -115,7 +115,7 @@ def url_construct(coords, res):
 def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
     xDiff = abs(abs(coords[3]) - abs(coords[1]))
-    size = [xDiff/res, yDiff/res]
+    size = [xDiff/res[0], yDiff/res[1]]
     return size
 
 def request_map(url, coords):
