@@ -127,7 +127,7 @@ def request_map(url, coords):
 def convert_map(filename):
     command = f"gdal_translate -of AAIGrid {filename} app/data.asc"
     subprocess.run([command], shell=True)
-    return "data.asc"
+    return "app/data.asc"
 
 def getFolderSize():
     ''' Calculates the size of the maps folder
