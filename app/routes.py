@@ -211,6 +211,14 @@ def pipeline(coords, res):
     except:
         app_log.exception("Hashing error occured")
     
+
+    #file cleanup
+    try:
+        os.remove('app/exportImage')
+        os.remove('app/data.prj')
+        os.remove('app/data.asc.aux.xml')
+    except:
+        app_log.info("Error cleaning up files")
     return data
 
 #setting up the server log
