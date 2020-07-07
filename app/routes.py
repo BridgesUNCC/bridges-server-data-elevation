@@ -110,6 +110,7 @@ def url_construct(coords, res):
     #minlon, minlat, maxlon, maxlat
     size = size_calc(coords, res)
     url = url + f"{coords[0]},{coords[1]},{coords[2]},{coords[3]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
+    app_log.info(url)
     return url
 
 def size_calc(coords, res):
