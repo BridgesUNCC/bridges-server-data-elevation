@@ -116,7 +116,7 @@ def url_construct(coords, res):
 def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
     xDiff = abs(abs(coords[3]) - abs(coords[1]))
-    size = [xDiff/res[0], yDiff/res[1]]
+    size = [round(xDiff/res[0]), round(yDiff/res[1])]
     return size
 
 def request_map(url, coords):
@@ -214,7 +214,7 @@ def pipeline(coords, res):
     return data
 
 #setting up the server log
-format = logging.Formatter('%(asctime)s %(message)s')
+format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
 
 logFile = 'log.log'
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
