@@ -188,7 +188,7 @@ def pipeline(coords, res):
     if(res[1] < 0.01):
         res[1] = .01666
 
-    data = request_map(url_construct(coords, res), coords)
+    data = convert_map(request_map(url_construct(coords, res), coords))
 
     os.makedirs(f'{map_dir}')
     os.rename(f'{data}', f'{map_dir}/data')
