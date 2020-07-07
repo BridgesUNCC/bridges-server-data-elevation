@@ -15,12 +15,12 @@ import shutil
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
 LRU = []
-noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.asc&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=aaigrid&'
+noaa_url = 'https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox='
 divider = "-----------------------------------------------------------------"
 
 
-
-#https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&resx=0.016666666666666667&resy=0.016666666666666667&bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
+#bbox=-79.99167,35.95833,-79.62500,36.19167&bboxSR=4326&size=22,14&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
+#https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox=-82.07500,34.39167,-78.87500,35.92500&bboxSR=4326&size=192,92&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
 #bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
 #minlon, minlat, maxlon, maxlat
 
@@ -108,14 +108,15 @@ def server_error(e=''):
 def url_construct(coords, res):
     url = noaa_url
     #minlon, minlat, maxlon, maxlat
-    url = url + f"resx={res[0]}&resy={res[1]}&bbox={coords[0]},{coords[1]},{coords[2]},{coords[3]}"
+    size = size_calc(coords, res)
+    url = url + f"{coords[0]},{coords[1]},{coords[2]},{coords[3]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     return url
 
-def density_calc(coords):
+def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
     xDiff = abs(abs(coords[3]) - abs(coords[1]))
-    den = [xDiff/10, yDiff/10]
-    return den
+    size = [xDiff/res, yDiff/res]
+    return size
 
 def request_map(url, coords):
     filename = wget.download(url, out=f'app/')
