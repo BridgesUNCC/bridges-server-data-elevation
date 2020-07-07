@@ -22,6 +22,9 @@ http://cci-bridges-elevation-t.dyn.uncc.edu/elevation?minLon=6.0205581&minLat=46
 ### Python Library Requirements
     - flask
     - wget
+    
+### Unix Library Dependencies
+    - gdal-bin
 
 ### Launching the Server
 From the servers main directory run the command
