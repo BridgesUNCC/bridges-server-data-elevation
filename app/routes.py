@@ -34,6 +34,12 @@ divider = "-----------------------------------------------------------------"
 #minLon=-80.97006&minLat=35.08092&maxLon=-80.6693&maxLat=35.3457
 #http://127.0.0.1:5000/elevation?minLon=-80.745950&minLat=35.29678&maxLon=-80.725715&maxLat=35.312370
 
+#https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox=-98.04167,41.02500,-96.95833,42.50833&bboxSR=4326&size=65,89&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
+
+
+#WSEN
+#LON,LAT,LON,LAT
+
 # This takes the output of the server and adds the appropriate headers to make the security team happy
 def harden_response(message_str):
     response = app.make_response(message_str)
@@ -122,7 +128,6 @@ def size_calc(coords, res):
 def request_map(url, coords):
     filename = wget.download(url, out=f'app/')
     return filename
-
 
 def convert_map(filename):
     command = f"gdal_translate -of AAIGrid {filename} app/data.asc"
@@ -214,7 +219,7 @@ def pipeline(coords, res):
 
     #file cleanup
     try:
-        #os.remove('app/exportImage')
+        os.remove('app/exportImage')
         os.remove('app/data.prj')
         os.remove('app/data.asc.aux.xml')
     except:
