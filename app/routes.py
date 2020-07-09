@@ -214,7 +214,7 @@ def pipeline(coords, res):
 
     #file cleanup
     try:
-        os.remove('app/exportImage')
+        #os.remove('app/exportImage')
         os.remove('app/data.prj')
         os.remove('app/data.asc.aux.xml')
     except:
