@@ -6,7 +6,7 @@ The elevation data server for BRIDGES takes in a bounding box and returns an Arc
 ## Making Requests
 The structure for making elevation data requests is as followed (using this will use the default resoultion values of 1 arc min or .0166)
 ```html
-http://cci-bridges-elevation-t.dyn.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059
+https://cci-bridges-elevation-t.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059
 ```
 
 
@@ -15,7 +15,7 @@ http://cci-bridges-elevation-t.dyn.uncc.edu/elevation?minLon=6.0205581&minLat=46
 
 To use your own density values format it like
 ```html
-http://cci-bridges-elevation-t.dyn.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059&resX=.01&resY=.01
+https://cci-bridges-elevation.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059&resX=.01&resY=.01
 ```
 
 ## Running this Server
