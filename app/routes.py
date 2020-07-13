@@ -50,11 +50,11 @@ def harden_response(message_str):
 @app.route('/elevation')
 def ele():
     try:
-        coord_val = [round(float(request.args['minLon']), round_val), round(float(request.args['minLat']), round_val), round(float(request.args['maxLon']), round_val), round(float(request.args['maxLat']), round_val)]
+        coord_val = [round(float(request.args['minLat']), round(float(request.args['minLon']), round_val), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
         app_log.info(f"Requester: {request.remote_addr}")
-        app_log.info(f"Script started with BBox: {request.args['minLon']}, {request.args['minLat']}, {request.args['maxLon']}, {request.args['maxLat']}")
+        app_log.info(f"Script started with BBox: {request.args['minLat']}, {request.args['minLon']}, {request.args['maxLat']}, {request.args['maxLon']}")
     except:
         print("System arguements are invalid")
         app_log.exception(f"System arguements invalid {request.args}")
@@ -115,7 +115,7 @@ def url_construct(coords, res):
     url = noaa_url
     #minlon, minlat, maxlon, maxlat
     size = size_calc(coords, res)
-    url = url + f"{coords[0]},{coords[1]},{coords[2]},{coords[3]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
+    url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     app_log.info(url)
     return url
 
