@@ -50,7 +50,7 @@ def harden_response(message_str):
 @app.route('/elevation')
 def ele():
     try:
-        coord_val = [round(float(request.args['minLat']), round(float(request.args['minLon']), round_val), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
+        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
         app_log.info(f"Requester: {request.remote_addr}")
