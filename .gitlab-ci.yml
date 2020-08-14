@@ -1,16 +1,29 @@
 stages:
   - test
+  - prod
 
 test:
   tags:
      - test
+
   stage: test
   script:
     - virtualenv venv
     - source venv/bin/activate
     - pip install flask
     - pip install wget
-    - python run.py
+    - flask run --host=0.0.0.0 --port=8080
+
+prod:
+  tags:
+    - prod
+  stage: prod
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install flask
+    - pip install wget
+    - flask run --host=0.0.0.0 --port=8080
 
   artifacts:
     paths:
