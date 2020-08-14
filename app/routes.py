@@ -5,6 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import wget
 import os
+import subprocess
 import math
 import hashlib
 import pickle
@@ -14,12 +15,12 @@ import shutil
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
 LRU = []
-noaa_url = 'https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.asc&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=aaigrid&'
+noaa_url = 'https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox='
 divider = "-----------------------------------------------------------------"
 
 
-
-#https://gis.ngdc.noaa.gov/mapviewer-support/wcs-proxy/wcs.groovy?filename=etopo1.xyz&request=getcoverage&version=1.0.0&service=wcs&coverage=etopo1&CRS=EPSG:4326&format=xyz&resx=0.016666666666666667&resy=0.016666666666666667&bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
+#bbox=-79.99167,35.95833,-79.62500,36.19167&bboxSR=4326&size=22,14&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
+#https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox=-82.07500,34.39167,-78.87500,35.92500&bboxSR=4326&size=192,92&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
 #bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
 #minlon, minlat, maxlon, maxlat
 
@@ -33,6 +34,12 @@ divider = "-----------------------------------------------------------------"
 #minLon=-80.97006&minLat=35.08092&maxLon=-80.6693&maxLat=35.3457
 #http://127.0.0.1:5000/elevation?minLon=-80.745950&minLat=35.29678&maxLon=-80.725715&maxLat=35.312370
 
+#https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox=-98.04167,41.02500,-96.95833,42.50833&bboxSR=4326&size=65,89&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
+
+
+#WSEN
+#LON,LAT,LON,LAT
+
 # This takes the output of the server and adds the appropriate headers to make the security team happy
 def harden_response(message_str):
     response = app.make_response(message_str)
@@ -43,11 +50,11 @@ def harden_response(message_str):
 @app.route('/elevation')
 def ele():
     try:
-        coord_val = [round(float(request.args['minLon']), round_val), round(float(request.args['minLat']), round_val), round(float(request.args['maxLon']), round_val), round(float(request.args['maxLat']), round_val)]
+        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
         app_log.info(f"Requester: {request.remote_addr}")
-        app_log.info(f"Script started with BBox: {request.args['minLon']}, {request.args['minLat']}, {request.args['maxLon']}, {request.args['maxLat']}")
+        app_log.info(f"Script started with BBox: {request.args['minLat']}, {request.args['minLon']}, {request.args['maxLat']}, {request.args['maxLon']}")
     except:
         print("System arguements are invalid")
         app_log.exception(f"System arguements invalid {request.args}")
@@ -107,18 +114,25 @@ def server_error(e=''):
 def url_construct(coords, res):
     url = noaa_url
     #minlon, minlat, maxlon, maxlat
-    url = url + f"resx={res[0]}&resy={res[1]}&bbox={coords[0]},{coords[1]},{coords[2]},{coords[3]}"
+    size = size_calc(coords, res)
+    url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
+    app_log.info(url)
     return url
 
-def density_calc(coords):
+def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
     xDiff = abs(abs(coords[3]) - abs(coords[1]))
-    den = [xDiff/10, yDiff/10]
-    return den
+    size = [round(xDiff/res[0]), round(yDiff/res[1])]
+    return size
 
 def request_map(url, coords):
     filename = wget.download(url, out=f'app/')
     return filename
+
+def convert_map(filename):
+    command = f"gdal_translate -of AAIGrid {filename} app/data.asc"
+    subprocess.run([command], shell=True)
+    return "app/data.asc"
 
 def getFolderSize():
     ''' Calculates the size of the maps folder
@@ -179,7 +193,7 @@ def pipeline(coords, res):
     if(res[1] < 0.01):
         res[1] = .01666
 
-    data = request_map(url_construct(coords, res), coords)
+    data = convert_map(request_map(url_construct(coords, res), coords))
 
     os.makedirs(f'{map_dir}')
     os.rename(f'{data}', f'{map_dir}/data')
@@ -202,10 +216,19 @@ def pipeline(coords, res):
     except:
         app_log.exception("Hashing error occured")
     
+
+    #file cleanup
+    try:
+        os.remove('app/exportImage')
+        os.remove('app/data.prj')
+        os.remove('app/data.asc.aux.xml')
+    except:
+        app_log.info("Error cleaning up files")
     return data
 
 #setting up the server log
-format = logging.Formatter('%(asctime)s %(message)s')
+format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
+
 logFile = 'log.log'
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
                                  backupCount=2, encoding=None, delay=0)
