@@ -71,7 +71,7 @@ def ele():
 @app.route('/hash')
 def hashreturn():
     try:
-        coord_val = [round(float(request.args['minLon']), round_val), round(float(request.args['minLat']), round_val), round(float(request.args['maxLon']), round_val), round(float(request.args['maxLat']), round_val)]
+        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
         app_log.info(f"Requester: {request.remote_addr}")
@@ -81,16 +81,22 @@ def hashreturn():
         app_log.exception(f"System arguements invalid {request.args}")
         return 'not valid coordinate inputs'
     
+    try:
+        res_val = [round(float(request.args['resX']), round_val), round(float(request.args['resY']), round_val)]
+        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
+    except:
+        res_val = [.01666, .01666]
 
-    dir = f"app/elevation_maps/{coord_val[0]}/{coord_val[1]}/{coord_val[2]}/{coord_val[3]}"
+    dir = dir_construct(coord_val, res_val)
 
     try:
         with open(f"{dir}/hash.txt", 'r') as f:
             re = f.readlines()
             app_log.info(f"Hash value found: {re[0]}")
             return harden_response(re[0])
-    except:
+    except Exception as e:
         print("No map hash found")
+        print(e)
         return harden_response("false")
  
     return ''
@@ -118,6 +124,10 @@ def url_construct(coords, res):
     url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     app_log.info(url)
     return url
+
+def dir_construct(coords, res):
+    dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/{res[0]}/{res[1]}"
+    return dir
 
 def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
@@ -180,7 +190,7 @@ def lruUpdate(location, level):
     return
 
 def pipeline(coords, res):
-    map_dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
+    map_dir = dir_construct(coords, res)
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
         data = f.read()
@@ -188,12 +198,13 @@ def pipeline(coords, res):
         f.close()
         return data
 
-    if (res[0] < 0.01):
+    if (res[0] < 0.01666):
         res[0] = .01666
-    if(res[1] < 0.01):
+    if(res[1] < 0.01666):
         res[1] = .01666
 
     data = convert_map(request_map(url_construct(coords, res), coords))
+    print(data)
 
     os.makedirs(f'{map_dir}')
     os.rename(f'{data}', f'{map_dir}/data')
