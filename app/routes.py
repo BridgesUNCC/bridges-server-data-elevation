@@ -11,6 +11,8 @@ import hashlib
 import pickle
 import io
 import shutil
+import click
+
 
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
@@ -49,7 +51,7 @@ def harden_response(message_str):
 
 @app.route('/elevation')
 def ele():
-    try:
+    '''try:
         coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
@@ -65,12 +67,15 @@ def ele():
         app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
     except:
         res_val = [.01666, .01666]
-        
+    '''
+
+    app_log.info(f"Requester: {request.remote_addr}")
+    coord_val, res_val = parse_parameters(request.args)
     return harden_response(pipeline(coord_val, res_val))
 
 @app.route('/hash')
 def hashreturn():
-    try:
+    '''try:
         coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
@@ -86,7 +91,10 @@ def hashreturn():
         app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
     except:
         res_val = [.01666, .01666]
+    '''
 
+    app_log.info(f"Requester: {request.remote_addr}")
+    coord_val, res_val = parse_parameters(request.args)
     dir = dir_construct(coord_val, res_val)
 
     try:
@@ -116,6 +124,27 @@ def page_not_found(e=''):
 @app.errorhandler(500)
 def server_error(e=''):
     return harden_response("Server Error occured while attempting to process your request. Please try again...")
+
+# Returns two lists of parameters(bounding box corrdinates and resolution values) given the arguments
+def parse_parameters(args):
+    try:
+        coord_val = [round(float(args['minLat']), round_val), round(float(args['minLon']), round_val), round(float(args['maxLat']), round_val), round(float(args['maxLon']), round_val)]
+        #log stuffs
+        app_log.info(divider)
+        #app_log.info(f"Requester: {request.remote_addr}")
+        app_log.info(f"Script started with BBox: {args['minLat']}, {args['minLon']}, {args['maxLat']}, {args['maxLon']}")
+    except:
+        print("System arguements are invalid")
+        app_log.exception(f"System arguements invalid {request.args}")
+        return 'not valid coordinate inputs'
+
+    try:
+        res_val = [round(float(args['resX']), round_val), round(float(args['resY']), round_val)]
+        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
+    except:
+        res_val = [.01666, .01666]
+    
+    return coord_val, res_val
 
 def url_construct(coords, res):
     url = noaa_url
@@ -204,9 +233,10 @@ def pipeline(coords, res):
         res[1] = .01666
 
     data = convert_map(request_map(url_construct(coords, res), coords))
-    print(data)
-
-    os.makedirs(f'{map_dir}')
+    try:
+        os.makedirs(f'{map_dir}')
+    except:
+        pass
     os.rename(f'{data}', f'{map_dir}/data')
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
@@ -236,6 +266,14 @@ def pipeline(coords, res):
     except:
         app_log.info("Error cleaning up files")
     return data
+
+@app.cli.command('wipe')
+def wipe_cache():
+    try:
+        shutil.rmtree('app/elevation_maps')
+        os.mkdir('app/elevation_maps')
+    except:
+        pass
 
 #setting up the server log
 format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
