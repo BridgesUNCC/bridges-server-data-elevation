@@ -11,6 +11,8 @@ import hashlib
 import pickle
 import io
 import shutil
+import click
+
 
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
@@ -49,7 +51,7 @@ def harden_response(message_str):
 
 @app.route('/elevation')
 def ele():
-    try:
+    '''try:
         coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
@@ -65,13 +67,16 @@ def ele():
         app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
     except:
         res_val = [.01666, .01666]
-        
+    '''
+    app_log.info(divider)
+    app_log.info(f"Requester: {request.remote_addr}")
+    coord_val, res_val = parse_parameters(request.args)
     return harden_response(pipeline(coord_val, res_val))
 
 @app.route('/hash')
 def hashreturn():
-    try:
-        coord_val = [round(float(request.args['minLon']), round_val), round(float(request.args['minLat']), round_val), round(float(request.args['maxLon']), round_val), round(float(request.args['maxLat']), round_val)]
+    '''try:
+        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
         #log stuffs
         app_log.info(divider)
         app_log.info(f"Requester: {request.remote_addr}")
@@ -81,16 +86,25 @@ def hashreturn():
         app_log.exception(f"System arguements invalid {request.args}")
         return 'not valid coordinate inputs'
     
-
-    dir = f"app/elevation_maps/{coord_val[0]}/{coord_val[1]}/{coord_val[2]}/{coord_val[3]}"
+    try:
+        res_val = [round(float(request.args['resX']), round_val), round(float(request.args['resY']), round_val)]
+        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
+    except:
+        res_val = [.01666, .01666]
+    '''
+    app_log.info(divider)
+    app_log.info(f"Requester: {request.remote_addr}")
+    coord_val, res_val = parse_parameters(request.args)
+    dir = dir_construct(coord_val, res_val)
 
     try:
         with open(f"{dir}/hash.txt", 'r') as f:
             re = f.readlines()
             app_log.info(f"Hash value found: {re[0]}")
             return harden_response(re[0])
-    except:
+    except Exception as e:
         print("No map hash found")
+        print(e)
         return harden_response("false")
  
     return ''
@@ -111,6 +125,25 @@ def page_not_found(e=''):
 def server_error(e=''):
     return harden_response("Server Error occured while attempting to process your request. Please try again...")
 
+# Returns two lists of parameters(bounding box corrdinates and resolution values) given the arguments
+def parse_parameters(args):
+    try:
+        coord_val = [round(float(args['minLat']), round_val), round(float(args['minLon']), round_val), round(float(args['maxLat']), round_val), round(float(args['maxLon']), round_val)]
+        #app_log.info(f"Requester: {request.remote_addr}")
+        app_log.info(f"Script started with BBox: {args['minLat']}, {args['minLon']}, {args['maxLat']}, {args['maxLon']}")
+    except:
+        print("System arguements are invalid")
+        app_log.exception(f"System arguements invalid {request.args}")
+        return 'not valid coordinate inputs'
+
+    try:
+        res_val = [round(float(args['resX']), round_val), round(float(args['resY']), round_val)]
+        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
+    except:
+        res_val = [.01666, .01666]
+    
+    return coord_val, res_val
+
 def url_construct(coords, res):
     url = noaa_url
     #minlon, minlat, maxlon, maxlat
@@ -118,6 +151,10 @@ def url_construct(coords, res):
     url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     app_log.info(url)
     return url
+
+def dir_construct(coords, res):
+    dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}/{res[0]}/{res[1]}"
+    return dir
 
 def size_calc(coords, res):
     yDiff = abs(abs(coords[2]) - abs(coords[0]))
@@ -180,7 +217,7 @@ def lruUpdate(location, level):
     return
 
 def pipeline(coords, res):
-    map_dir = f"app/elevation_maps/{coords[0]}/{coords[1]}/{coords[2]}/{coords[3]}"
+    map_dir = dir_construct(coords, res)
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
         data = f.read()
@@ -188,14 +225,16 @@ def pipeline(coords, res):
         f.close()
         return data
 
-    if (res[0] < 0.01):
+    if (res[0] < 0.01666):
         res[0] = .01666
-    if(res[1] < 0.01):
+    if(res[1] < 0.01666):
         res[1] = .01666
 
     data = convert_map(request_map(url_construct(coords, res), coords))
-
-    os.makedirs(f'{map_dir}')
+    try:
+        os.makedirs(f'{map_dir}')
+    except:
+        pass
     os.rename(f'{data}', f'{map_dir}/data')
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
@@ -213,8 +252,8 @@ def pipeline(coords, res):
             app_log.info("Hash: " + md5_hash.hexdigest())
         with open(f"{map_dir}/hash.txt", "w") as h:
             h.write(md5_hash.hexdigest())
-    except:
-        app_log.exception("Hashing error occured")
+    except Exception as e:
+        app_log.exception(f"Hashing error occured: {e}")
     
 
     #file cleanup
@@ -226,20 +265,39 @@ def pipeline(coords, res):
         app_log.info("Error cleaning up files")
     return data
 
+@app.cli.command('wipe')
+def wipe_cache():
+    try:
+        shutil.rmtree('app/elevation_maps')
+        os.mkdir('app/elevation_maps')
+        os.remove('lru.txt')
+    except:
+        pass
+
 #setting up the server log
+app_log = logging.getLogger('elev-logger')
+app_log.setLevel(logging.DEBUG)
+
+formatt = logging.Formatter('%(asctime)s %(message)s')
+
+fh = logging.FileHandler('log.log', mode='a')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatt)
+app_log.addHandler(fh)
+
+
+'''
 format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
 
 logFile = 'log.log'
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
                                  backupCount=2, encoding=None, delay=0)
 my_handler.setFormatter(format)
-my_handler.setLevel(logging.ERROR)
+my_handler.setLevel(logging.DEBUG)
 
-app_log = logging.getLogger('root')
-app_log.setLevel(logging.DEBUG)
 
 app_log.addHandler(my_handler)
-
+'''
 try:
     with open("lru.txt", "rb") as fp:
         LRU = pickle.load(fp)

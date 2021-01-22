@@ -16,6 +16,13 @@ From the servers main directory run the command
 ```bash
 flask run --host=0.0.0.0 --port=8080
 ```
+### Clearing Cached Elevation Files
+From the servers main directory run the command
+```bash
+flask wipe
+```
+
+
 
 ## Making Requests
 The structure for making elevation data requests is as followed (using this will use the default resoultion values of 1 arc min or .0166)
