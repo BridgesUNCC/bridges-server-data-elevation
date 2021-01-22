@@ -68,7 +68,7 @@ def ele():
     except:
         res_val = [.01666, .01666]
     '''
-
+    app_log.info(divider)
     app_log.info(f"Requester: {request.remote_addr}")
     coord_val, res_val = parse_parameters(request.args)
     return harden_response(pipeline(coord_val, res_val))
@@ -92,7 +92,7 @@ def hashreturn():
     except:
         res_val = [.01666, .01666]
     '''
-
+    app_log.info(divider)
     app_log.info(f"Requester: {request.remote_addr}")
     coord_val, res_val = parse_parameters(request.args)
     dir = dir_construct(coord_val, res_val)
@@ -129,8 +129,6 @@ def server_error(e=''):
 def parse_parameters(args):
     try:
         coord_val = [round(float(args['minLat']), round_val), round(float(args['minLon']), round_val), round(float(args['maxLat']), round_val), round(float(args['maxLon']), round_val)]
-        #log stuffs
-        app_log.info(divider)
         #app_log.info(f"Requester: {request.remote_addr}")
         app_log.info(f"Script started with BBox: {args['minLat']}, {args['minLon']}, {args['maxLat']}, {args['maxLon']}")
     except:
@@ -152,7 +150,6 @@ def url_construct(coords, res):
     size = size_calc(coords, res)
     url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     app_log.info(url)
-    print(url)
     return url
 
 def dir_construct(coords, res):
@@ -255,8 +252,8 @@ def pipeline(coords, res):
             app_log.info("Hash: " + md5_hash.hexdigest())
         with open(f"{map_dir}/hash.txt", "w") as h:
             h.write(md5_hash.hexdigest())
-    except:
-        app_log.exception("Hashing error occured")
+    except Exception as e:
+        app_log.exception(f"Hashing error occured: {e}")
     
 
     #file cleanup
@@ -278,19 +275,29 @@ def wipe_cache():
         pass
 
 #setting up the server log
+app_log = logging.getLogger('elev-logger')
+app_log.setLevel(logging.DEBUG)
+
+formatt = logging.Formatter('%(asctime)s %(message)s')
+
+fh = logging.FileHandler('log.log', mode='a')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatt)
+app_log.addHandler(fh)
+
+
+'''
 format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
 
 logFile = 'log.log'
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
                                  backupCount=2, encoding=None, delay=0)
 my_handler.setFormatter(format)
-my_handler.setLevel(logging.ERROR)
+my_handler.setLevel(logging.DEBUG)
 
-app_log = logging.getLogger('root')
-app_log.setLevel(logging.DEBUG)
 
 app_log.addHandler(my_handler)
-
+'''
 try:
     with open("lru.txt", "rb") as fp:
         LRU = pickle.load(fp)
