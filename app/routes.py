@@ -152,6 +152,7 @@ def url_construct(coords, res):
     size = size_calc(coords, res)
     url = url + f"{coords[1]},{coords[0]},{coords[3]},{coords[2]}&bboxSR=4326&size={size[0]},{size[1]}&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image"
     app_log.info(url)
+    print(url)
     return url
 
 def dir_construct(coords, res):
@@ -272,6 +273,7 @@ def wipe_cache():
     try:
         shutil.rmtree('app/elevation_maps')
         os.mkdir('app/elevation_maps')
+        os.remove('lru.txt')
     except:
         pass
 
