@@ -283,6 +283,7 @@ def wipe_cache():
         shutil.rmtree('app/elevation_maps')
         os.mkdir('app/elevation_maps')
         os.remove('lru.txt')
+        file_cleanup()
     except:
         pass
 
