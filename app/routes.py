@@ -123,6 +123,7 @@ def page_not_found(e=''):
 
 @app.errorhandler(500)
 def server_error(e=''):
+    file_cleanup()
     return harden_response("Server Error occured while attempting to process your request. Please try again...")
 
 # Returns two lists of parameters(bounding box corrdinates and resolution values) given the arguments
@@ -163,7 +164,7 @@ def size_calc(coords, res):
     return size
 
 def request_map(url, coords):
-    filename = wget.download(url, out=f'app/')
+    filename = wget.download(url, out=f'app')
     return filename
 
 def convert_map(filename):
@@ -235,6 +236,7 @@ def pipeline(coords, res):
         os.makedirs(f'{map_dir}')
     except:
         pass
+    
     os.rename(f'{data}', f'{map_dir}/data')
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
@@ -257,13 +259,23 @@ def pipeline(coords, res):
     
 
     #file cleanup
-    try:
-        os.remove('app/exportImage')
-        os.remove('app/data.prj')
-        os.remove('app/data.asc.aux.xml')
-    except:
-        app_log.info("Error cleaning up files")
+    file_cleanup()
+
     return data
+
+
+def file_cleanup():
+    #file cleanup
+    try:
+        if os.path.exists('app/exportImage'):
+            os.remove('app/exportImage')
+        if os.path.exists('app/data.prj'):
+            os.remove('app/data.prj')
+        if os.path.exists('app/data.asc.aux.xml'):
+            os.remove('app/data.asc.aux.xml')
+    except:
+        app_log.info("Error cleaning up temp files")
+    return
 
 @app.cli.command('wipe')
 def wipe_cache():
