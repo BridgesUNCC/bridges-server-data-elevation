@@ -49,6 +49,23 @@ def harden_response(message_str):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     return response
 
+""" Elevation Route
+    get:
+        summary: Elevation Grid Request
+        description: ascii grid within the provided bounding box
+        path: /elevation
+        parameters:
+            minLon (float): float of the minimum longitude of the requested bounding box
+            minLat (float): float of the minimum latitude of the requested bounding box
+            maxLon (float): float of the maximum longitude of the requested bounding box
+            maxLat (float): float of the maximum latitude of the requested bounding box
+            resX (float): (optional) float value representing the distance between elevation points in the x-axis with the smallest value being .01666
+            resY (float): (optional) float value representing the distance between elevation points in the y-axis with the smallest value being .01666
+
+        responses:
+            200:
+                description: string return formatted to a ascii grid format of elevation values
+"""
 @app.route('/elevation')
 def ele():
     '''try:
@@ -73,6 +90,23 @@ def ele():
     coord_val, res_val = parse_parameters(request.args)
     return harden_response(pipeline(coord_val, res_val))
 
+""" hash Route
+    get:
+        summary: Hash Request
+        description: generated hash of the request elevation bounding box
+        path: /hash
+        parameters:
+            minLon (float): float of the minimum longitude of the requested bounding box
+            minLat (float): float of the minimum latitude of the requested bounding box
+            maxLon (float): float of the maximum longitude of the requested bounding box
+            maxLat (float): float of the maximum latitude of the requested bounding box
+            resX (float): (optional) float value representing the distance between elevation points in the x-axis with the smallest value being .01666
+            resY (float): (optional) float value representing the distance between elevation points in the y-axis with the smallest value being .01666
+
+        responses:
+            200:
+                description: string return containing the hash
+"""
 @app.route('/hash')
 def hashreturn():
     '''try:
