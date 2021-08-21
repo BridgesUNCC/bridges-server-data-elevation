@@ -49,6 +49,23 @@ def harden_response(message_str):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     return response
 
+""" Elevation Route
+    get:
+        summary: Elevation Grid Request
+        description: ascii grid within the provided bounding box
+        path: /elevation
+        parameters:
+            minLon (float): float of the minimum longitude of the requested bounding box
+            minLat (float): float of the minimum latitude of the requested bounding box
+            maxLon (float): float of the maximum longitude of the requested bounding box
+            maxLat (float): float of the maximum latitude of the requested bounding box
+            resX (float): (optional) float value representing the distance between elevation points in the x-axis with the smallest value being .01666
+            resY (float): (optional) float value representing the distance between elevation points in the y-axis with the smallest value being .01666
+
+        responses:
+            200:
+                description: string return formatted to a ascii grid format of elevation values
+"""
 @app.route('/elevation')
 def ele():
     '''try:
@@ -73,6 +90,23 @@ def ele():
     coord_val, res_val = parse_parameters(request.args)
     return harden_response(pipeline(coord_val, res_val))
 
+""" hash Route
+    get:
+        summary: Hash Request
+        description: generated hash of the request elevation bounding box
+        path: /hash
+        parameters:
+            minLon (float): float of the minimum longitude of the requested bounding box
+            minLat (float): float of the minimum latitude of the requested bounding box
+            maxLon (float): float of the maximum longitude of the requested bounding box
+            maxLat (float): float of the maximum latitude of the requested bounding box
+            resX (float): (optional) float value representing the distance between elevation points in the x-axis with the smallest value being .01666
+            resY (float): (optional) float value representing the distance between elevation points in the y-axis with the smallest value being .01666
+
+        responses:
+            200:
+                description: string return containing the hash
+"""
 @app.route('/hash')
 def hashreturn():
     '''try:
@@ -123,6 +157,7 @@ def page_not_found(e=''):
 
 @app.errorhandler(500)
 def server_error(e=''):
+    file_cleanup()
     return harden_response("Server Error occured while attempting to process your request. Please try again...")
 
 # Returns two lists of parameters(bounding box corrdinates and resolution values) given the arguments
@@ -163,7 +198,7 @@ def size_calc(coords, res):
     return size
 
 def request_map(url, coords):
-    filename = wget.download(url, out=f'app/')
+    filename = wget.download(url, out=f'app')
     return filename
 
 def convert_map(filename):
@@ -235,6 +270,7 @@ def pipeline(coords, res):
         os.makedirs(f'{map_dir}')
     except:
         pass
+    
     os.rename(f'{data}', f'{map_dir}/data')
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
@@ -257,13 +293,23 @@ def pipeline(coords, res):
     
 
     #file cleanup
-    try:
-        os.remove('app/exportImage')
-        os.remove('app/data.prj')
-        os.remove('app/data.asc.aux.xml')
-    except:
-        app_log.info("Error cleaning up files")
+    file_cleanup()
+
     return data
+
+
+def file_cleanup():
+    #file cleanup
+    try:
+        if os.path.exists('app/exportImage'):
+            os.remove('app/exportImage')
+        if os.path.exists('app/data.prj'):
+            os.remove('app/data.prj')
+        if os.path.exists('app/data.asc.aux.xml'):
+            os.remove('app/data.asc.aux.xml')
+    except:
+        app_log.info("Error cleaning up temp files")
+    return
 
 @app.cli.command('wipe')
 def wipe_cache():
@@ -271,6 +317,7 @@ def wipe_cache():
         shutil.rmtree('app/elevation_maps')
         os.mkdir('app/elevation_maps')
         os.remove('lru.txt')
+        file_cleanup()
     except:
         pass
 
