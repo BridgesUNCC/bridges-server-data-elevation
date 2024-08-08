@@ -208,7 +208,7 @@ def request_map(url, coords):
 
 def convert_map(filename):
     command = f"gdal_translate -of AAIGrid {filename} app/data.asc"
-    subprocess.run([command], shell=True)
+    subprocess.run([command], shell=True, check=True)
     return "app/data.asc"
 
 def getFolderSize():
@@ -270,7 +270,12 @@ def pipeline(coords, res):
     if(res[1] < 0.01666):
         res[1] = .01666
 
-    data = convert_map(request_map(url_construct(coords, res), coords))
+    try:
+        data = convert_map(request_map(url_construct(coords, res), coords))
+    except subprocess.SubprocessError as e:
+        app_log.info("Error converting map. Error was:\n {0}".format(str(e)))
+        return server_error()
+        
     try:
         os.makedirs(f'{map_dir}')
     except:
