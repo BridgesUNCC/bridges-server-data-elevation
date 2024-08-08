@@ -5,9 +5,20 @@ The elevation data server for BRIDGES takes in a bounding box and returns an Arc
 
 ## Running this Server
 ### Python Library Requirements
-    - flask
-    - wget
-    
+Fundamentally, there are only 2 packages required: flask and wget. But there are dependencies that are important. So there is a `requirements.txt` in there. There is a ned for a particular version of python. Here 3.8. So I suggest using a proper virtual env to make all of that work. For me it looks like:
+
+set up the venv
+```bash
+$ /opt/python-3.8.10/bin/python3 -m venv myvenv #recreate environemnt against python 3.8
+$ . ./myenv/bin/activate
+$ pip install -r requirements.txt
+```
+
+and in each session call
+```bash
+$ . ./myenv/bin/activate
+```
+
 ### Unix Library Dependencies
     - gdal-bin
 
@@ -26,8 +37,8 @@ flask wipe
 
 ## Making Requests
 The structure for making elevation data requests is as followed (using this will use the default resoultion values of 1 arc min or .0166)
-```html
-https://cci-bridges-elevation-t.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059
+```
+http://bridges-data-server-elevation.bridgesuncc.org/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059
 ```
 
 
@@ -35,8 +46,8 @@ https://cci-bridges-elevation-t.uncc.edu/elevation?minLon=6.0205581&minLat=46.10
 ### The resolution of a map is what each incriment will be on the x and y axis. 
 
 To use your own resolution values format it like
-```html
-https://cci-bridges-elevation.uncc.edu/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059&resX=.01&resY=.01
+```
+http://bridges-data-server-elevation.bridgesuncc.org/elevation?minLon=6.0205581&minLat=46.10757&maxLon=9.707863&maxLat=47.77059&resX=.01&resY=.01
 ```
 ## Data Return Format
 ```
