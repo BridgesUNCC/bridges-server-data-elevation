@@ -1,6 +1,7 @@
 from app import app
 from flask import request
 from flask import send_file
+from flask import Response
 import logging
 from logging.handlers import RotatingFileHandler
 import wget
@@ -89,7 +90,10 @@ def ele():
     app_log.info(divider)
     app_log.info(f"Requester: {request.remote_addr}")
     coord_val, res_val = parse_parameters(request.args)
-    return harden_response(pipeline(coord_val, res_val))
+    return_pipeline=pipeline(coord_val, res_val)
+    if type(return_pipeline) is Response:
+        return return_pipeline
+    return harden_response(return_pipeline)
 
 """ hash Route
     get:
@@ -271,8 +275,13 @@ def pipeline(coords, res):
         os.makedirs(f'{map_dir}')
     except:
         pass
-    
-    os.rename(f'{data}', f'{map_dir}/data')
+
+    try:
+        os.rename(f'{data}', f'{map_dir}/data')
+    except OSError as e:
+        app_log.info("Could not moved downloaded file from source to its proper cached location. Error was:\n {0}".format(str(e)))
+        return server_error()
+        
     if (os.path.isfile(f"{map_dir}/data")):
         f = open(f"{map_dir}/data")
         data = f.read()
