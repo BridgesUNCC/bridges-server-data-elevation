@@ -22,17 +22,6 @@ noaa_url = 'http://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice
 divider = "-----------------------------------------------------------------"
 
 
-#bbox=-79.99167,35.95833,-79.62500,36.19167&bboxSR=4326&size=22,14&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
-#https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox=-82.07500,34.39167,-78.87500,35.92500&bboxSR=4326&size=192,92&imageSR=4326&format=tiff&pixelType=S16&interpolation=+RSP_NearestNeighbor&compression=LZW&f=image
-#bbox=-98.08593749997456,36.03133177632377,-88.94531249997696,41.508577297430456
-#minlon, minlat, maxlon, maxlat
-
-
-
-#35.3123702255912,-80.72571581793821
-#35.29678506001799,-80.74595040274656
-
-
 #Test coords
 #minLon=-80.97006&minLat=35.08092&maxLon=-80.6693&maxLat=35.3457
 #http://127.0.0.1:5000/elevation?minLon=-80.745950&minLat=35.29678&maxLon=-80.725715&maxLat=35.312370
@@ -70,23 +59,6 @@ def harden_response(message_str, httpcode=200):
 """
 @app.route('/elevation')
 def ele():
-    '''try:
-        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
-        #log stuffs
-        app_log.info(divider)
-        app_log.info(f"Requester: {request.remote_addr}")
-        app_log.info(f"Script started with BBox: {request.args['minLat']}, {request.args['minLon']}, {request.args['maxLat']}, {request.args['maxLon']}")
-    except:
-        print("System arguments are invalid")
-        app_log.exception(f"System arguments invalid {request.args}")
-        return 'not valid coordinate inputs'
-
-    try:
-        res_val = [round(float(request.args['resX']), round_val), round(float(request.args['resY']), round_val)]
-        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
-    except:
-        res_val = [.01666, .01666]
-    '''
     app_log.info(divider)
     app_log.info(f"Requester: {request.remote_addr}")
     coord_val, res_val = parse_parameters(request.args)
@@ -114,23 +86,6 @@ def ele():
 """
 @app.route('/hash')
 def hashreturn():
-    '''try:
-        coord_val = [round(float(request.args['minLat']), round_val), round(float(request.args['minLon']), round_val), round(float(request.args['maxLat']), round_val), round(float(request.args['maxLon']), round_val)]
-        #log stuffs
-        app_log.info(divider)
-        app_log.info(f"Requester: {request.remote_addr}")
-        app_log.info(f"Script started with BBox: {request.args['minLon']}, {request.args['minLat']}, {request.args['maxLon']}, {request.args['maxLat']}")
-    except:
-        print("System arguments are invalid")
-        app_log.exception(f"System arguments invalid {request.args}")
-        return 'not valid coordinate inputs'
-    
-    try:
-        res_val = [round(float(request.args['resX']), round_val), round(float(request.args['resY']), round_val)]
-        app_log.info(f"Density Resolution: {res_val[0]}, {res_val[1]}")
-    except:
-        res_val = [.01666, .01666]
-    '''
     app_log.info(divider)
     app_log.info(f"Requester: {request.remote_addr}")
     coord_val, res_val = parse_parameters(request.args)
@@ -348,18 +303,6 @@ fh.setFormatter(formatt)
 app_log.addHandler(fh)
 
 
-'''
-format = logging.Formatter('%(asctime)s %(message)s')   #TODO: Logger not logging
-
-logFile = 'log.log'
-my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=5*1024*1024,
-                                 backupCount=2, encoding=None, delay=0)
-my_handler.setFormatter(format)
-my_handler.setLevel(logging.DEBUG)
-
-
-app_log.addHandler(my_handler)
-'''
 try:
     with open("lru.txt", "rb") as fp:
         LRU = pickle.load(fp)
