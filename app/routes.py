@@ -43,10 +43,11 @@ divider = "-----------------------------------------------------------------"
 #LON,LAT,LON,LAT
 
 # This takes the output of the server and adds the appropriate headers to make the security team happy
-def harden_response(message_str):
+def harden_response(message_str, httpcode=200):
     response = app.make_response(message_str)
     response.headers['Content-Security-Policy'] = "default-src 'self'"
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.status_code=httpcode
     return response
 
 """ Elevation Route
@@ -149,16 +150,16 @@ def icon():
 
 @app.route('/')
 def noinput():
-    return harden_response(page_not_found())
+    return page_not_found()
 
 @app.errorhandler(404)
 def page_not_found(e=''):
-    return harden_response("Not a valid URL")
+    return harden_response("Not a valid URL", httpcode=404)
 
 @app.errorhandler(500)
 def server_error(e=''):
     file_cleanup()
-    return harden_response("Server Error occured while attempting to process your request. Please try again...")
+    return harden_response("Server Error occured while attempting to process your request. Please try again...", httpcode=500)
 
 # Returns two lists of parameters(bounding box corrdinates and resolution values) given the arguments
 def parse_parameters(args):
