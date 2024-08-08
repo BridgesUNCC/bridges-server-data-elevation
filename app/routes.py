@@ -18,7 +18,7 @@ import click
 round_val = 4
 maxMapFolderSize = 1*1024*1024*1024  #change first value to set number of gigabytes the map folder should be
 LRU = []
-noaa_url = 'https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox='
+noaa_url = 'http://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/ETOPO1_ice_surface/ImageServer/exportImage?bbox='
 divider = "-----------------------------------------------------------------"
 
 
