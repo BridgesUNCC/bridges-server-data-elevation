@@ -75,8 +75,8 @@ def ele():
         app_log.info(f"Requester: {request.remote_addr}")
         app_log.info(f"Script started with BBox: {request.args['minLat']}, {request.args['minLon']}, {request.args['maxLat']}, {request.args['maxLon']}")
     except:
-        print("System arguements are invalid")
-        app_log.exception(f"System arguements invalid {request.args}")
+        print("System arguments are invalid")
+        app_log.exception(f"System arguments invalid {request.args}")
         return 'not valid coordinate inputs'
 
     try:
@@ -116,8 +116,8 @@ def hashreturn():
         app_log.info(f"Requester: {request.remote_addr}")
         app_log.info(f"Script started with BBox: {request.args['minLon']}, {request.args['minLat']}, {request.args['maxLon']}, {request.args['maxLat']}")
     except:
-        print("System arguements are invalid")
-        app_log.exception(f"System arguements invalid {request.args}")
+        print("System arguments are invalid")
+        app_log.exception(f"System arguments invalid {request.args}")
         return 'not valid coordinate inputs'
     
     try:
@@ -167,8 +167,8 @@ def parse_parameters(args):
         #app_log.info(f"Requester: {request.remote_addr}")
         app_log.info(f"Script started with BBox: {args['minLat']}, {args['minLon']}, {args['maxLat']}, {args['maxLon']}")
     except:
-        print("System arguements are invalid")
-        app_log.exception(f"System arguements invalid {request.args}")
+        print("System arguments are invalid")
+        app_log.exception(f"System arguments invalid {request.args}")
         return 'not valid coordinate inputs'
 
     try:

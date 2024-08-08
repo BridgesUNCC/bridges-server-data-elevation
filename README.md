@@ -43,7 +43,7 @@ http://bridges-data-server-elevation.bridgesuncc.org/elevation?minLon=6.0205581&
 
 
 
-### The resolution of a map is what each incriment will be on the x and y axis. 
+### The resolution of a map is what each increment will be on the x and y axis. 
 
 To use your own resolution values format it like
 ```
